@@ -1,101 +1,152 @@
-import Image from "next/image";
+import { Suspense } from "react";
+import type { Metadata } from "next";
+import Script from "next/script";
+import HeroSection from "@/components/layout/hero-section";
+import AboutMeSection from "@/components/layout/about-section";
+import ServicesSection from "@/components/layout/services-section";
+import { getProjects, getTestimonials } from "@/lib/data"; // Funkcje do pobrania danych
+
+// Częściowo wyrenderowane komponenty (Partial Prerendering - nowe w Next.js 15)
+import { unstable_noStore as noStore } from "next/cache";
+import ProjectsSection from "@/components/layout/projects-section";
+import TestimonialsSection from "@/components/layout/testimonials-section";
+import CTASection from "@/components/layout/cta-section";
+import { SmoothScroll } from "@/components/ambro-ui/smooth-scroll";
+import InfrastructureConcept from "@/components/layout/interactive-infrastructure";
+import TechStackSection from "@/components/layout/tech-stack-section";
+
+// Komponent zastępczy dla dynamicznie ładowanych sekcji
+function DynamicSectionSkeleton({ title }: { title: string }) {
+  return (
+    <div className="w-full py-16 px-4">
+      <div className="max-w-6xl mx-auto">
+        <h2 className="text-3xl font-bold text-center mb-8">{title}</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-gray-800/50 rounded-lg h-64 animate-pulse"
+              aria-hidden="true"
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Dodatkowe metadane dla strony głównej
+export const metadata: Metadata = {
+  title: "Ambro-Dev - DevOps, Automatyzacja, Aplikacje Webowe",
+  description:
+    "Kompleksowe usługi DevOps, automatyzacja procesów IT, administracja serwerami, tworzenie aplikacji webowych i optymalizacja infrastruktury.",
+  keywords:
+    "DevOps, automatyzacja, aplikacje webowe, chmura, AWS, infrastruktura IT, monitoring, CI/CD",
+};
+
+// Asynchroniczna funkcja do pobrania projektów (Server Component)
+async function ProjectsData() {
+  // Wykorzystanie noStore() do wyłączenia cache dla tej części (Partial Prerendering)
+  noStore();
+
+  // Pobierz projekty (symulacja opóźnienia dla demonstracji PPR)
+  const projects = await getProjects();
+
+  return (
+    <Suspense fallback={<DynamicSectionSkeleton title="Nasze projekty" />}>
+      <ProjectsSection projects={projects} />
+    </Suspense>
+  );
+}
+
+// Asynchroniczna funkcja do pobrania opinii (Server Component)
+async function TestimonialsData() {
+  // Wykorzystanie noStore() do wyłączenia cache dla tej części (Partial Prerendering)
+  noStore();
+
+  // Pobierz opinie (symulacja opóźnienia dla demonstracji PPR)
+  const testimonials = await getTestimonials();
+
+  return (
+    <Suspense fallback={<DynamicSectionSkeleton title="Opinie klientów" />}>
+      <TestimonialsSection testimonials={testimonials} />
+    </Suspense>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <>
+      {/* JSON-LD dla strony głównej */}
+      <Script
+        id="structured-data-home"
+        type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            name: "Ambro-Dev - DevOps, Automatyzacja, Aplikacje Webowe",
+            description:
+              "Kompleksowe usługi DevOps, automatyzacja procesów IT, administracja serwerami, tworzenie aplikacji webowych i optymalizacja infrastruktury.",
+            mainEntity: {
+              "@type": "ProfessionalService",
+              name: "Ambro-Dev",
+              description:
+                "Kompleksowe usługi DevOps, automatyzacja procesów IT, administracja serwerami, tworzenie aplikacji webowych i optymalizacja infrastruktury.",
+              image: "/logo.webp",
+              telephone: "+48123456789",
+              email: "kontakt@ambro-dev.pl",
+              address: {
+                "@type": "PostalAddress",
+                addressCountry: "PL",
+              },
+              priceRange: "$$",
+              openingHours: "Mo-Fr 09:00-17:00",
+              serviceType: [
+                "DevOps",
+                "Cloud Migration",
+                "Web Development",
+                "IT Automation",
+              ],
+            },
+          }),
+        }}
+      />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      <main className="min-h-screen text-white relative overflow-hidden md:pt-0 pt-28">
+        {/* Smooth Scroll */}
+        <SmoothScroll>
+          {/* Prerendered Sections (szybkie ładowanie) */}
+          <HeroSection />
+          <AboutMeSection />
+          <ServicesSection />
+
+          {/* Partial Prerendering (ładowane dynamicznie) */}
+          <Suspense
+            fallback={<DynamicSectionSkeleton title="Infrastruktura" />}
           >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <InfrastructureConcept />
+          </Suspense>
+
+          {/* Server Components z asynchronicznym pobieraniem danych */}
+          <ProjectsData />
+
+          <Suspense fallback={<DynamicSectionSkeleton title="Technologie" />}>
+            <TechStackSection />
+          </Suspense>
+
+          <TestimonialsData />
+
+          <Suspense
+            fallback={
+              <div className="h-48 bg-gradient-to-r from-indigo-500 to-purple-600" />
+            }
           >
-            Read our docs
-          </a>
-        </div>
+            <CTASection />
+          </Suspense>
+        </SmoothScroll>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    </>
   );
 }
