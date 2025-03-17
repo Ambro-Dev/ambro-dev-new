@@ -1,51 +1,85 @@
 // src/app/sitemap.ts
 import type { MetadataRoute } from "next";
 import { serviceCategories } from "@/data/services";
+import { baseURL } from "@/app/resources";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-	const baseUrl = "https://ambro.dev";
+// Dodatkowe typy dla elementów sitemap
+type SitemapFrequency =
+	| "always"
+	| "hourly"
+	| "daily"
+	| "weekly"
+	| "monthly"
+	| "yearly"
+	| "never";
 
-	// Get service URLs
-	const serviceUrls = serviceCategories.map((service) => ({
-		url: `${baseUrl}/uslugi/${service.id}`,
-		lastModified: new Date(),
-		changeFrequency: "monthly" as const,
-		priority: 0.8,
-	}));
+interface SitemapEntry {
+	url: string;
+	lastModified: string | Date;
+	changeFrequency: SitemapFrequency;
+	priority: number;
+}
 
-	// Add other pages
-	const staticPages = [
+// Pomocnicza funkcja formatująca datę dla sitemap
+function formatDate(date: Date): string {
+	return date.toISOString();
+}
+
+// Funkcja do dynamicznego generowania sitemap.xml
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+	const currentDate = formatDate(new Date());
+
+	// Podstawowe strony
+	const staticPages: SitemapEntry[] = [
 		{
-			url: baseUrl,
-			lastModified: new Date(),
-			changeFrequency: "weekly" as const,
+			url: `https://${baseURL}`,
+			lastModified: currentDate,
+			changeFrequency: "weekly",
 			priority: 1.0,
 		},
 		{
-			url: `${baseUrl}/uslugi`,
-			lastModified: new Date(),
-			changeFrequency: "weekly" as const,
+			url: `https://${baseURL}/uslugi`,
+			lastModified: currentDate,
+			changeFrequency: "weekly",
 			priority: 0.9,
 		},
 		{
-			url: `${baseUrl}/o-mnie`,
-			lastModified: new Date(),
-			changeFrequency: "monthly" as const,
-			priority: 0.7,
-		},
-		{
-			url: `${baseUrl}/kontakt`,
-			lastModified: new Date(),
-			changeFrequency: "monthly" as const,
-			priority: 0.7,
-		},
-		{
-			url: `${baseUrl}/blog`,
-			lastModified: new Date(),
-			changeFrequency: "weekly" as const,
+			url: `https://${baseURL}/o-mnie`,
+			lastModified: currentDate,
+			changeFrequency: "monthly",
 			priority: 0.8,
+		},
+		{
+			url: `https://${baseURL}/projekty`,
+			lastModified: currentDate,
+			changeFrequency: "weekly",
+			priority: 0.8,
+		},
+		{
+			url: `https://${baseURL}/kontakt`,
+			lastModified: currentDate,
+			changeFrequency: "monthly",
+			priority: 0.7,
 		},
 	];
 
-	return [...staticPages, ...serviceUrls];
+	// Strony usług
+	const servicePages: SitemapEntry[] = serviceCategories.map((service) => ({
+		url: `https://${baseURL}/uslugi/${service.id}`,
+		lastModified: currentDate,
+		changeFrequency: "monthly",
+		priority: 0.7,
+	}));
+
+	// Tutaj możesz dodać dynamiczne pobieranie innych stron, np. blogowych
+	// const blogPosts = await getBlogPosts();
+	// const blogPages = blogPosts.map((post) => ({
+	//   url: `https://${baseURL}/blog/${post.slug}`,
+	//   lastModified: new Date(post.updatedAt || post.createdAt),
+	//   changeFrequency: "monthly" as SitemapFrequency,
+	//   priority: 0.6,
+	// }));
+
+	// Połącz wszystkie strony
+	return [...staticPages, ...servicePages];
 }

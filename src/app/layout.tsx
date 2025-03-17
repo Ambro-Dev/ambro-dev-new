@@ -1,20 +1,34 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { cx } from "class-variance-authority";
 import { baseURL, home, style } from "./resources";
-import Script from "next/script";
-import dynamic from "next/dynamic";
+import { fontClasses } from "@/lib/fonts";
 
 // Statycznie zaimportowane komponenty krytyczne dla pierwszego renderowania
 import Navigation from "@/components/navigation";
 import { WebVitals } from "@/components/web-vitals";
+import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
+import { SkipToContent } from "@/components/accessibility/SkipToContent";
+import DefaultSeo from "@/components/default-seo";
+
+// Komponent ładowania dla Suspense
+const LoadingFallback = () => (
+  <div className="fixed inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm z-50">
+    <div className="bg-gray-800 rounded-md p-4 shadow-xl">
+      <div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto" />
+      <p className="mt-2 text-sm text-gray-300">Ładowanie...</p>
+    </div>
+  </div>
+);
 
 // Dynamiczne importy z lazy-loading dla niekrytycznych komponentów
+import dynamic from "next/dynamic";
+import { AccessibilityWidget } from "@/components/accessibility/AccessibilityWidget";
+
 const Footer = dynamic(() => import("@/components/footer"), {
   ssr: true, // Server-side rendering dla SEO
+  loading: () => <div className="h-64 bg-black" />,
 });
 
 const ScrollProgress = dynamic(
@@ -33,18 +47,8 @@ const FloatingBubbles = dynamic(
   { ssr: true, loading: () => <div className="absolute inset-0 z-0" /> }
 );
 
-// Analytics component
 const Analytics = dynamic(() => import("@/components/analytics"), {
   ssr: true,
-});
-
-const primary = Inter({
-  variable: "--font-primary",
-  subsets: ["latin"],
-  display: "swap",
-  preload: true,
-  fallback: ["system-ui", "sans-serif"],
-  adjustFontFallback: true, // Nowa funkcja w Next.js 15
 });
 
 // Rozszerzone metadane zgodne z Next.js 15
@@ -138,9 +142,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Combine all font variables
-  const fontClasses = cx(primary.variable, "dark antialiased");
-
   return (
     <html
       lang="pl"
@@ -157,7 +158,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        {/* Preload critical assets - funkcja Next.js 15 */}
+        {/* Preload critical assets - funkcja Next.js */}
         <link
           rel="preload"
           as="image"
@@ -177,87 +178,71 @@ export default function RootLayout({
         {/* PWA manifest */}
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-
-        {/* Dane strukturalne Schema.org */}
-        <Script
-          id="schema-org"
-          type="application/ld+json"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              name: "Ambro-Dev",
-              url: `https://${baseURL}`,
-              logo: `https://${baseURL}/logo.webp`,
-              description: home.description,
-              email: "kontakt@ambro-dev.pl",
-              telephone: "+48123456789",
-              address: {
-                "@type": "PostalAddress",
-                addressCountry: "PL",
-              },
-              sameAs: [
-                "https://github.com/ambro-dev",
-                "https://linkedin.com/company/ambro-dev",
-              ],
-            }),
-          }}
-          strategy="afterInteractive" // Next.js 15 - strategy option
-        />
       </head>
       <body className="flex flex-col min-h-screen">
-        <WebVitals />
-        {/* Analytics Component */}
-        <Analytics />
+        <AccessibilityProvider>
+          <DefaultSeo />
+          <WebVitals />
+          {/* Skip to content dla dostępności */}
+          <SkipToContent />
+          {/* Analytics Component */}
+          <Analytics />
 
-        <ThemeProvider
-          attribute="class"
-          forcedTheme="dark"
-          disableTransitionOnChange
-        >
-          {/* Scroll Progress Indicator zoptymalizowany pod Next.js 15 */}
-          <Suspense
-            fallback={
-              <div className="h-1 w-full bg-transparent fixed top-0 z-50" />
-            }
+          <ThemeProvider
+            attribute="class"
+            forcedTheme="dark"
+            disableTransitionOnChange
           >
-            <ScrollProgress
-              position="top"
-              color="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
-              zIndex={60}
-              height={3}
-              borderRadius="rounded-none"
-            />
-          </Suspense>
-
-          {/* Navigation - prerendered */}
-          <Navigation />
-
-          <div className="flex-grow relative overflow-hidden">
-            {/* Floating bubbles - lazy loaded */}
-            <Suspense fallback={<div className="absolute inset-0 z-0" />}>
-              <div className="absolute inset-0 z-0">
-                <FloatingBubbles
-                  count={10} // Zredukowana liczba dla lepszej wydajności
-                  minSize={2}
-                  maxSize={6}
-                  color="rgba(99, 102, 241, 0.3)"
-                  minSpeed={0.5}
-                  maxSpeed={1}
-                  fixed
-                  className="h-full w-full opacity-50"
-                />
-              </div>
+            {/* Scroll Progress Indicator zoptymalizowany pod Next.js */}
+            <Suspense
+              fallback={
+                <div className="h-1 w-full bg-transparent fixed top-0 z-50" />
+              }
+            >
+              <ScrollProgress
+                position="top"
+                color="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"
+                zIndex={60}
+                height={3}
+                borderRadius="rounded-none"
+              />
             </Suspense>
-            {children}
-          </div>
 
-          {/* Footer - lazy loaded */}
-          <Suspense fallback={<div className="h-64 bg-black" />}>
-            <Footer />
-          </Suspense>
-        </ThemeProvider>
+            {/* Navigation - prerendered */}
+            <Navigation />
+
+            <div className="flex-grow relative overflow-hidden">
+              {/* Floating bubbles - lazy loaded */}
+              <Suspense fallback={<div className="absolute inset-0 z-0" />}>
+                <div className="absolute inset-0 z-0">
+                  <FloatingBubbles
+                    count={10} // Zredukowana liczba dla lepszej wydajności
+                    minSize={2}
+                    maxSize={6}
+                    color="rgba(99, 102, 241, 0.3)"
+                    minSpeed={0.5}
+                    maxSpeed={1}
+                    fixed
+                    className="h-full w-full opacity-50"
+                  />
+                </div>
+              </Suspense>
+
+              {/* Main content with ID for skip-to-content */}
+              <main id="main-content" tabIndex={-1}>
+                <Suspense fallback={<LoadingFallback />}>{children}</Suspense>
+              </main>
+            </div>
+
+            {/* Footer - lazy loaded */}
+            <Suspense fallback={<div className="h-64 bg-black" />}>
+              <Footer />
+            </Suspense>
+
+            {/* Widget dostępności */}
+            <AccessibilityWidget />
+          </ThemeProvider>
+        </AccessibilityProvider>
       </body>
     </html>
   );

@@ -97,14 +97,8 @@ const about = {
 				timeframe: "2022 - Obecnie",
 				role: "Starszy Inżynier Oprogramowania / Specjalista DevOps",
 				achievements: [
-					<>
-						Usprawnił architekturę systemu, zwiększając wydajność aplikacji o
-						25% i skracając czas wdrożeń o 40%.
-					</>,
-					<>
-						Wdrożył automatyzację procesów CI/CD, co przyczyniło się do 50%
-						redukcji błędów w produkcji.
-					</>,
+					"Usprawnił architekturę systemu, zwiększając wydajność aplikacji o 25% i skracając czas wdrożeń o 40%",
+					"Wdrożył automatyzację procesów CI/CD, co przyczyniło się do 50% redukcji błędów w produkcji",
 				],
 				images: [
 					{
@@ -120,14 +114,8 @@ const about = {
 				timeframe: "2018 - 2022",
 				role: "Inżynier Oprogramowania / DevOps",
 				achievements: [
-					<>
-						Opracował skalowalne rozwiązania chmurowe, poprawiając efektywność
-						systemów o 30%.
-					</>,
-					<>
-						Koordynował zespół wdrażający nowe technologie, co skutkowało 20%
-						wzrostem stabilności usług.
-					</>,
+					"Opracował skalowalne rozwiązania chmurowe, poprawiając efektywność systemów o 30%.",
+					"Koordynował zespół wdrażający nowe technologie, co skutkowało 20% wzrostem stabilności usług.",
 				],
 				images: [],
 			},
